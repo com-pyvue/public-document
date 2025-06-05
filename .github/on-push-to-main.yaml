@@ -1,0 +1,30 @@
+name: On Push to Main
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  tag-with-timestamp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Determine timestamp tag
+        id: timestamp
+        run: |
+          # Use UTC; format as YYYY.MM.DD.HH.MM
+          TAG=$(date -u +'%Y.%m.%d.%H.%M')
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+        env:
+          TAG: ${{ steps.timestamp.outputs.tag }}
